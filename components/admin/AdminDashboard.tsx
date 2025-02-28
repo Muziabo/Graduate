@@ -1,4 +1,5 @@
 import { Admin, Resource, CustomRoutes } from "react-admin";
+
 import { Route } from "react-router-dom";
 import authProvider from "@/provider/authProvider";
 import dataProvider from "@/lib/dataProvider";
@@ -46,7 +47,8 @@ const AdminDashboard = () => {
     const router = useRouter();
 
     useEffect(() => {
-        if (status === "loading") return; // Do nothing while loading
+        if (status === "loading") return; // Show loading spinner
+
         if (!session || (session.user.role !== "ADMIN" && session.user.role !== "INSTITUTION_ADMIN")) {
             router.push("/admin/login");
         }
@@ -57,7 +59,8 @@ const AdminDashboard = () => {
     }
 
     if (!session || (session.user.role !== "ADMIN" && session.user.role !== "INSTITUTION_ADMIN")) {
-        return <div>Unauthorized</div>;
+        return <div>You are not authorized to access this page.</div>;
+
     }
 
     return (

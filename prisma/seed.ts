@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { PrismaClient, GownCategory, UserRole, GownType, OrderType } from '@prisma/client';
+import { PrismaClient, UserRole, GownType, OrderType, GownCategory } from '@prisma/client';
 import bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
@@ -13,8 +13,8 @@ async function main() {
         phone: faker.phone.number(),
         type: faker.helpers.arrayElement(['University', 'Academy']),
         category: faker.helpers.arrayElement(['Private', 'Public']),
-        establishedAt: faker.date.past(), // Updated field name
-        isActive: faker.datatype.boolean(), // Updated field name
+        establishedAt: faker.date.past(),
+        isActive: faker.datatype.boolean(),
     }));
 
     for (const institution of institutions) {
@@ -34,22 +34,22 @@ async function main() {
         {
             name: "Super Admin",
             email: "admin@example.com",
-            password: hashedPassword, // Use bcrypt to hash passwords
+            password: hashedPassword,
             role: UserRole.ADMIN,
         },
         {
             name: "Institution Admin 1",
             email: "instadmin1@example.com",
-            password: hashedPassword, // Use bcrypt to hash passwords
+            password: hashedPassword,
             role: UserRole.INSTITUTION_ADMIN,
-            institutionId: institutionsList[0].id, // Assign to first institution
+            institutionId: institutionsList[0].id,
         },
         {
             name: "Institution Admin 2",
             email: "instadmin2@example.com",
-            password: hashedPassword, // Use bcrypt to hash passwords
+            password: hashedPassword,
             role: UserRole.INSTITUTION_ADMIN,
-            institutionId: institutionsList[1].id, // Assign to second institution
+            institutionId: institutionsList[1].id,
         },
     ];
 
@@ -87,20 +87,21 @@ async function main() {
     const studentsList = await prisma.student.findMany();
 
     // Step 4: Seed Gowns for Institutions
-    const gownCategories = ['UNDERGRADUATE', 'POSTGRADUATE', 'DOCTORAL', 'CUSTOM']; // Ensure these match the GownCategory enum
+    const gownCategories: GownCategory[] = [GownCategory.UNDERGRADUATE, GownCategory.POSTGRADUATE, GownCategory.DOCTORAL, GownCategory.CUSTOM];
     const gowns = institutionsList.flatMap((institution) =>
         Array.from({ length: 5 }).map(() => ({
             name: faker.commerce.productName(),
             size: faker.helpers.arrayElement(['S', 'M', 'L', 'XL']),
             price: parseFloat(faker.commerce.price()),
-            category: faker.helpers.arrayElement(gownCategories) as GownCategory, // Ensure enum values match
+            category: faker.helpers.arrayElement(gownCategories),
             customSize: faker.helpers.arrayElement(['S', 'M', 'L', 'XL']),
             inStock: faker.datatype.boolean(),
             images: {
                 create: [{ url: faker.image.url() }],
             },
-            type: faker.helpers.arrayElement([GownType.PHD, GownType.MASTERS, GownType.BACHELORS, GownType.DIPLOMA]), // Ensure enum values match
+            type: faker.helpers.arrayElement([GownType.PHD, GownType.MASTERS, GownType.BACHELORS, GownType.DIPLOMA]),
             InstitutionId: institution.id,
+            department: faker.helpers.arrayElement(['School of Sciences', 'School of Engineering & Technology', 'School of Education','School of Medicine & Health Sciences','School of Business & Economics', 'School of Arts & Humanities']),
             availableSizes: [
                 { size: 'S', stock: faker.number.int({ min: 0, max: 20 }) },
                 { size: 'M', stock: faker.number.int({ min: 0, max: 20 }) },
@@ -122,7 +123,7 @@ async function main() {
     // Step 5: Seed Orders for Gowns
     const orders = gownsList.flatMap((gown) =>
         Array.from({ length: 2 }).map(() => ({
-            studentId: faker.helpers.arrayElement(studentsList).id, // Use valid student id from studentsList
+            studentId: faker.helpers.arrayElement(studentsList).id,
             gownId: gown.id,
             status: faker.helpers.arrayElement(['PENDING', 'COMPLETED']),
             type: faker.helpers.arrayElement([OrderType.BUY, OrderType.HIRE]),
@@ -135,6 +136,58 @@ async function main() {
         });
     }
     console.log('Random orders added for each gown!');
+
+    // Step 6: Seed Photography Services
+    const photographyServices = institutionsList.flatMap((institution) =>
+        Array.from({ length: 10 }).map(() => ({
+            name: faker.commerce.productName(),
+            description: faker.commerce.productDescription(),
+            price: parseFloat(faker.commerce.price()),
+            category: faker.helpers.arrayElement(['PORTRAIT', 'GROUP', 'EVENT', 'CANDID']),
+            images: {
+                create: [{ url: faker.image.url() }],
+            },
+            Institution: {
+                connect: { id: institution.id }
+            }
+        }))
+    );
+
+    for (const service of photographyServices) {
+        await prisma.photography.create({
+            data: service,
+        });
+    }
+    console.log('Random photography services added!');
+
+    const photographyServicesList = await prisma.photography.findMany();
+
+    // Step 7: Seed Frames for Photography
+    if (photographyServicesList.length > 0) {
+        const frames = institutionsList.flatMap((institution) =>
+            Array.from({ length: 5 }).map(() => ({
+                name: faker.commerce.productName(),
+                price: parseFloat(faker.commerce.price()),
+                color: faker.color.human(),
+                thickness: faker.helpers.arrayElement(['2mm', '3mm', '4mm']),
+                material: faker.helpers.arrayElement(['Wood', 'Metal', 'Plastic']),
+                mountColor: faker.helpers.arrayElement(['Burgundy', 'Green', 'Cream', 'Red', 'Black', 'Brown']),
+                photographyId: faker.helpers.arrayElement(photographyServicesList).id,
+                images: {
+                    create: [{ url: faker.image.url() }],
+                },
+            }))
+        );
+
+        for (const frame of frames) {
+            await prisma.frame.create({
+                data: frame,
+            });
+        }
+        console.log('Random frames added for each photography service!');
+    } else {
+        console.log('No photography services found, skipping frame seeding.');
+    }
 }
 
 main()

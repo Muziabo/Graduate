@@ -1,21 +1,19 @@
-"use client";
-import { CartProvider } from "@/context/CartContext";
-import React, { ReactNode } from "react";
+// components/Layout.tsx
+'use client';
 import Header from "./Header";
 import Footer from "./Footer";
+import { ReactNode } from 'react';
 
 type LayoutProps = {
-    children: ReactNode;
+  children: ReactNode;
 };
 
 export default function Layout({ children }: LayoutProps) {
-    return (
-                <CartProvider>
-                    <div className="flex flex-col min-h-screen">
-                        <Header />
-                        <main className="flex-grow">{children}</main>
-                        <Footer />
-                    </div>
-                </CartProvider>
-    );
+  return (
+    <div className="flex flex-col min-h-screen">
+      <Header />
+      <main className="flex-grow">{children}</main>
+      <Footer />
+    </div>
+  );
 }

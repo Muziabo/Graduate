@@ -8,99 +8,139 @@ datasource db {
 }
 
 model Order {
-  id        Int    @id @default(autoincrement())
-  studentId Int
-  gownId    Int
-  status    String
-  type      OrderType
-  Gown      Gown   @relation(fields: [gownId], references: [id])
+  id                 Int       @id @default(autoincrement())
+  studentId          Int
+  gownId             Int?
+  status             String
+  type               OrderType
+  customMeasurements Json?
+  Gown               Gown?     @relation(fields: [gownId], references: [id])
+  Student            Student   @relation(fields: [studentId], references: [id])
 }
 
 model Gown {
-  id            Int         @id @default(autoincrement())
-  name          String
-  size          String
-  price         Float
-  category      GownCategory
-  customSize    Json?
-  inStock       Boolean     @default(true)
-  images        Image[]
-  type          GownType
-  InstitutionId Int
-  Institution   Institution @relation(fields: [InstitutionId], references: [id])
-  orders        Order[]
-  availableSizes Json?      
+  id             Int          @id @default(autoincrement())
+  name           String
+  size           String
+  price          Float
+  InstitutionId  Int
+  inStock        Boolean      @default(true)
+  category       GownCategory
+  customSize     Json?
+  type           GownType
+  availableSizes Json?
+  department     String
+  Institution    Institution  @relation(fields: [InstitutionId], references: [id])
+  images         Image[]
+  orders         Order[]
 }
 
-
 model Image {
-  id      Int    @id @default(autoincrement())
-  url     String
-  gownId  Int
-  Gown    Gown   @relation(fields: [gownId], references: [id])
+  id     Int    @id @default(autoincrement())
+  url    String
+  gownId Int
+  Gown   Gown   @relation(fields: [gownId], references: [id])
 }
 
 model Institution {
-  id             Int           @id @default(autoincrement())
-  name           String
-  description    String
-  email          String        @unique
-  phone          String?
-  type           String
-  category       String
-  establishedAt  DateTime
-  isActive       Boolean       @default(true)
-  students       Student[]
-  gowns          Gown[]
-  photos         Photography[]
-  users          User[]        @relation("InstitutionToUsers")
+  id            Int           @id @default(autoincrement())
+  name          String
+  description   String
+  email         String        @unique
+  phone         String?
+  type          String
+  category      String
+  establishedAt DateTime
+  isActive      Boolean       @default(true)
+  gowns         Gown[]
+  photos        Photography[]
+  students      Student[]
+  users         User[]        @relation("InstitutionToUsers")
 }
 
 model Photography {
-  id            Int         @id @default(autoincrement())
+  id            Int                @id @default(autoincrement())
   name          String
   description   String
   price         Float
   category      String
-  frames        Frame[]
   InstitutionId Int
-  Institution   Institution @relation(fields: [InstitutionId], references: [id])
+  frames        Frame[]
+  photoOrders   PhotoOrder[]
+  Institution   Institution        @relation(fields: [InstitutionId], references: [id])
+  images        PhotographyImage[]
+}
+
+model PhotographyImage {
+  id            Int         @id @default(autoincrement())
+  url           String
+  photographyId Int
+  photography   Photography @relation(fields: [photographyId], references: [id])
+}
+
+model PhotoOrder {
+  id              Int            @id @default(autoincrement())
+  studentId       Int
+  photographyId   Int
+  orderType       PhotoOrderType
+  deliveryContact String?
+  photoSize       String?
+  frameId         Int?
+  createdAt       DateTime       @default(now())
+  Frame           Frame?         @relation(fields: [frameId], references: [id])
+  Photography     Photography    @relation(fields: [photographyId], references: [id])
+  Student         Student        @relation(fields: [studentId], references: [id])
 }
 
 model Frame {
-  id            Int         @id @default(autoincrement())
+  id            Int          @id @default(autoincrement())
   name          String
   price         Float
   photographyId Int
-  Photography   Photography @relation(fields: [photographyId], references: [id])
+  color         String?
+  material      String?
+  mountColor    String?
+  thickness     String?
+  Photography   Photography  @relation(fields: [photographyId], references: [id])
+  images        FrameImage[]
+  photoOrders   PhotoOrder[]
+}
+
+model FrameImage {
+  id      Int    @id @default(autoincrement())
+  url     String
+  frameId Int
+  Frame   Frame  @relation(fields: [frameId], references: [id])
+}
+
+model Student {
+  id            Int          @id @default(autoincrement())
+  studentId     String       @unique
+  email         String       @unique
+  InstitutionId Int
+  name          String
+  phone         String?
+  userId        Int?         @unique
+  accounts      Account[]
+  orders        Order[]
+  photoOrders   PhotoOrder[]
+  sessions      Session[]
+  Institution   Institution  @relation(fields: [InstitutionId], references: [id])
+  user          User?        @relation(fields: [userId], references: [id])
 }
 
 model User {
   id            Int          @id @default(autoincrement())
-  name          String
   email         String       @unique
   password      String?
-  role          UserRole
   createdAt     DateTime     @default(now())
-  student       Student?
-  institutionId Int?
-  institution   Institution? @relation("InstitutionToUsers", fields: [institutionId], references: [id], onDelete: Cascade)
-  sessions      Session[]
-  accounts      Account[]
-}
-
-model Student {
-  id            Int         @id @default(autoincrement())
-  studentId     String      @unique
   name          String
-  email         String      @unique
-  phone         String?
-  InstitutionId Int
-  Institution   Institution @relation(fields: [InstitutionId], references: [id])
-  user          User?       @relation(fields: [userId], references: [id])
-  userId        Int?        @unique
-  sessions      Session[]
+  institutionId Int?
+  role          UserRole
   accounts      Account[]
+  sessions      Session[]
+  student       Student?
+  institution   Institution? @relation("InstitutionToUsers", fields: [institutionId], references: [id], onDelete: Cascade)
 }
 
 model Session {
@@ -109,8 +149,8 @@ model Session {
   expires      DateTime
   userId       Int?
   studentId    Int?
-  user         User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   student      Student? @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  user         User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Account {
@@ -120,15 +160,15 @@ model Account {
   type              String
   provider          String
   providerAccountId String   @unique
-  refreshToken      String?
+  scope             String?
   accessToken       String?
   expiresAt         Int?
-  tokenType         String?
-  scope             String?
   idToken           String?
+  refreshToken      String?
   sessionState      String?
-  user              User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenType         String?
   student           Student? @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  user              User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 enum UserRole {
@@ -154,4 +194,9 @@ enum GownType {
 enum OrderType {
   BUY
   HIRE
+}
+
+enum PhotoOrderType {
+  SOFT_COPY
+  HARD_COPY
 }

@@ -1,8 +1,12 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getSession } from 'next-auth/react';
-import prisma from '@/lib/prisma';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient(); // Initialize Prisma Client
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+    // Extract gown ID from query parameters
+
     const { id } = req.query;
 
     // Convert id to a number and validate it
@@ -20,26 +24,32 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         const institutionId = Number(session.user.institutionId);
 
-        if (req.method === 'GET') {
-            // Fetch the gown only if it belongs to the institution
-            const gown = await prisma.gown.findUnique({
+        if (req.method === 'GET') { // Handle GET request
+            console.log(`Fetching gown with ID: ${gownId} for institution: ${institutionId}`); // Log fetching details
+            
+            const gown = await prisma.gown.findUnique({ // Query gown from database
                 where: { 
-                    id: gownId,
-                    InstitutionId: institutionId
+                    id: gownId, // Match gown ID
+                    InstitutionId: institutionId // Match institution ID
                 },
-                include: { images: true, Institution: true, orders: true }, // Include orders relationship
+                include: { images: true, Institution: true, orders: true }, // Include related data
             });
 
-            if (!gown) {
-                return res.status(404).json({ error: 'Gown not found' });
+            if (!gown) { // Check if gown exists
+                console.error(`Gown not found - ID: ${gownId}, Institution: ${institutionId}`); // Log error
+                return res.status(404).json({ 
+                    error: 'Gown not found', // Return not found error
+                    details: `Gown ID: ${gownId} not found for institution ${institutionId}` // Provide details
+                });
             }
 
-            return res.status(200).json(gown);
+            return res.status(200).json(gown); // Return gown data
         } else {
-            return res.status(405).json({ error: 'Method not allowed' });
+            return res.status(405).json({ error: 'Method not allowed' }); // Handle unsupported methods
         }
-    } catch (error) {
-        console.error("[ERROR] API Error:", error);
-        return res.status(500).json({ error: 'Internal server error', details: error instanceof Error ? error.message : String(error) });
+
+    } catch (error) { // Catch any errors
+        console.error("[ERROR] API Error:", error); // Log error
+        return res.status(500).json({ error: 'Internal server error', details: error instanceof Error ? error.message : String(error) }); // Return error response
     }
-}
+} // End of handler function

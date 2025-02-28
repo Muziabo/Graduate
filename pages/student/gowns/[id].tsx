@@ -1,14 +1,23 @@
-import Layout from "@/components/Layout";
-import { useRouter } from "next/router";
-import { useSession } from "next-auth/react";
-import { useEffect, useState } from "react";
-import { useCart } from "@/context/CartContext";
+import Layout from '../../../components/Layout';
+import { useRouter } from 'next/router';
+import { useSession } from 'next-auth/react';
+import { useEffect, useState } from 'react';
+import { useCart } from '../../../context/CartContext';
+import ImageComponent from '../../../components/ImageComponent';
+
+
+
 
 export default function GownDetails() {
     const { data: session, status } = useSession();
     const router = useRouter();
     const { id } = router.query;
     const { addToCart } = useCart();
+
+    interface Image {
+        id: number;
+        url: string;
+    }
 
     interface Gown {
         id: number;
@@ -18,11 +27,11 @@ export default function GownDetails() {
         inStock: boolean;
         type: string;
         category: string;
-        images?: string[];
+        images: Image[];
         Institution: {
             name: string;
         };
-        availableSizes?: string[]; // Make availableSizes optional
+        availableSizes?: string[];
     }
 
     const [gown, setGown] = useState<Gown | null>(null);
@@ -44,7 +53,7 @@ export default function GownDetails() {
             }
             const data = await response.json();
             setGown(data);
-            setSelectedSize(data.size); // Set the default selected size
+            setSelectedSize(data.size);
             setLoading(false);
         } catch (err) {
             console.error("Error fetching gown details:", err);
@@ -56,12 +65,13 @@ export default function GownDetails() {
     const handleAddToCart = () => {
         if (gown) {
             addToCart({
-                id: gown.id,
+                id: gown.id.toString(),
                 name: gown.name,
                 size: selectedSize,
                 price: gown.price,
                 quantity: 1,
             });
+
             alert(`Added to cart! Size: ${selectedSize}`);
         }
     };
@@ -97,8 +107,17 @@ export default function GownDetails() {
                     <div className="max-w-4xl w-full bg-white shadow-sm rounded-lg p-6 mb-8">
                         <div className="flex flex-col md:flex-row">
                             <div className="flex-shrink-0">
-                                {gown.images && gown.images.length > 0 && (
-                                    <img src={gown.images[0]} alt={gown.name} className="w-96 h-96 object-cover rounded-md" />
+                                {gown.images && gown.images.length > 0 ? (
+                                    <ImageComponent
+                                        src={gown.images[0].url}
+                                        alt={gown.name}
+                                        className="w-96 h-96 object-cover rounded-md"
+                                        fallbackSrc="/images/default-gown.jpg"
+                                    />
+                                ) : (
+                                    <div className="w-96 h-96 bg-gray-200 rounded-md flex items-center justify-center">
+                                        <span className="text-gray-500">No image available</span>
+                                    </div>
                                 )}
                             </div>
                             <div className="mt-4 md:mt-0 md:ml-4">

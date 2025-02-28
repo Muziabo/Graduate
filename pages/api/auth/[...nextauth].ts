@@ -1,11 +1,29 @@
-import NextAuth from "next-auth";
+import NextAuth, { DefaultSession, NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import prisma from "@/lib/prisma"; // Import Prisma client
-import bcrypt from "bcrypt";
+import prisma from "@/lib/prisma";
+import bcrypt from "bcryptjs";
 
-export const authOptions = {
+declare module "next-auth" {
+    interface Session extends DefaultSession {
+        user: {
+            id: string;
+            email: string;
+            role: string;
+            institutionId?: string;
+        } & DefaultSession["user"]
+    }
+
+    interface JWT {
+        id: string;
+        role?: string;
+        institutionId?: string;
+        institutionName?: string;
+    }
+}
+
+export const authOptions: NextAuthOptions = {
     session: {
-        strategy: "jwt" as const, // Use "jwt" as a constant value for the session strategy
+        strategy: "jwt",
     },
     providers: [
         CredentialsProvider({
@@ -13,91 +31,88 @@ export const authOptions = {
             credentials: {
                 email: { label: "Email", type: "text" },
                 password: { label: "Password", type: "text" },
-                institution: { label: "Institution", type: "text" }, // Only for student login
+                institution: { label: "Institution", type: "text" },
             },
             async authorize(credentials) {
                 const { email, password, institution } = credentials || {};
 
-                console.log("Received credentials:", { email, password, institution });
-
                 if (!email || !password) {
-                    console.log("Missing credentials");
-                    return null;
+                    throw new Error("Missing credentials");
                 }
 
-                // Check if it's a student login (student needs instAdmin parameter)
+                // Student login flow
                 if (institution) {
                     const student = await prisma.student.findUnique({
                         where: { email },
-                        include: { Institution: true }, // Include instAdmin details
+                        include: { Institution: true },
                     });
 
-                    if (student && student.Institution.name === institution) {
-                        // Validate the student ID for students
-                        if (student.studentId === password) {
-                            console.log("Student authenticated");
-                            return {
-                                id: student.id.toString(),
-                                email: student.email,
-                                institutionId: student.Institution.id,
-                                institutionName: student.Institution.name,
-                                role: "STUDENT",
-                            };
-                        } else {
-                            console.log("Invalid student ID");
-                        }
-                    } else {
-                        console.log("Student not found or instAdmin mismatch");
+                    if (!student || student.Institution.name !== institution) {
+                        throw new Error("Student not found or institution mismatch");
                     }
+
+                    if (student.studentId !== password) {
+                        throw new Error("Invalid student ID");
+                    }
+
+                    return {
+                        id: student.id.toString(),
+                        email: student.email,
+                        role: "STUDENT",
+                        institutionId: student.Institution.id,
+                        institutionName: student.Institution.name,
+                    };
                 }
 
-                // Check if it's an admin login (admin is a User in the "User" model)
+                // Admin login flow
                 const admin = await prisma.user.findUnique({
                     where: { email },
+                    include: { institution: true },
                 });
 
-                if (admin) {
-                    // Validate the password for admins
-                    if (admin.password && await bcrypt.compare(password, admin.password)) {
-                        console.log("Admin authenticated");
-                        return {
-                            id: admin.id.toString(),
-                            email: admin.email,
-                            role: admin.role,
-                        };
-                    } else {
-                        console.log("Invalid admin password");
-                    }
+                if (!admin || !admin.password) {
+                    throw new Error("Admin not found");
                 }
 
-                console.log("Authentication failed");
-                return null;
+                const isValidPassword = await bcrypt.compare(password, admin.password);
+                if (!isValidPassword) {
+                    throw new Error("Invalid password");
+                }
+
+                return {
+                    id: admin.id.toString(),
+                    email: admin.email,
+                    role: admin.role,
+                    institutionId: admin.institutionId || undefined,
+                };
             },
         }),
     ],
     callbacks: {
-        async jwt({ token, user }: { token: any, user?: any }) {
+        async jwt({ token, user }) {
             if (user) {
                 token.id = user.id;
                 token.email = user.email;
                 token.role = user.role;
-                token.institutionId = user.institutionId || null;
-                token.institutionName = user.institutionName || null;
+                token.institutionId = user.institutionId;
+                if ('institutionName' in user) {
+                    token.institutionName = user.institutionName;
+                }
             }
             return token;
         },
-        async session({ session, token }: { session: any, token: any }) {
-            session.user.id = token.id;
-            session.user.email = token.email;
-            session.user.role = token.role;
-            session.user.institutionId = token.institutionId;
-            session.user.institutionName = token.institutionName;
+        async session({ session, token }) {
+            if (token) {
+                session.user.id = token.id;
+                session.user.email = token.email as string;
+                session.user.role = token.role as string;
+                session.user.institutionId = token.institutionId;
+            }
             return session;
         },
     },
     pages: {
-        signIn: "/student/login", // Default to student login page
-        adminSignIn: "/admin/login", // Admin login page
+        signIn: "/student/login",
     },
 };
 

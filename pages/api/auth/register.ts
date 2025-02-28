@@ -1,6 +1,7 @@
-import prisma from "@/lib/prisma"; // Import the centralized Prisma instance
+import prisma from "../../../lib/prisma"; // Import the centralized Prisma instance
+
 import type { NextApiRequest, NextApiResponse } from "next";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs"; // Only one import statement
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (req.method !== "POST") {

@@ -1,56 +1,44 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+import prisma from '@/lib/prisma'; // Import Prisma client
 
-type Photography = {
-    id: string;
-    name: string;
-    description: string;
-    price: number;
-    category: string;
-};
-
-// Mock database
-let photographyServices: Photography[] = [
-    {
-        id: '1',
-        name: 'Graduation Photography',
-        description: 'Graduation photography session',
-        price: 100,
-        category: 'Graduation',
-    },
-    {
-        id: '2',
-        name: 'Event Photography',
-        description: 'Event photography session',
-        price: 150,
-        category: 'Event',
-    },
-    // Add more photography services as needed
-];
-
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     const { id } = req.query;
-
-    const service = photographyServices.find((s) => s.id === id);
-
-    if (!service) {
-        return res.status(404).json({ message: 'Service not found' });
-    }
 
     if (req.method === 'GET') {
         // Get a specific photography service by ID
-        res.status(200).json(service);
+        try {
+            const service = await prisma.photography.findUnique({
+                where: { id: Number(id) },
+            });
+            if (!service) {
+                return res.status(404).json({ message: 'Service not found' });
+            }
+            res.status(200).json(service);
+        } catch (error) {
+            res.status(500).json({ error: 'Failed to fetch photography service' });
+        }
     } else if (req.method === 'PUT') {
         // Update a specific photography service by ID
         const { name, description, price, category } = req.body;
-        service.name = name;
-        service.description = description;
-        service.price = price;
-        service.category = category;
-        res.status(200).json(service);
+        try {
+            const updatedService = await prisma.photography.update({
+                where: { id: Number(id) },
+                data: { name, description, price, category },
+            });
+            res.status(200).json(updatedService);
+        } catch (error) {
+            res.status(500).json({ error: 'Failed to update photography service' });
+        }
     } else if (req.method === 'DELETE') {
         // Delete a specific photography service by ID
-        photographyServices = photographyServices.filter((s) => s.id !== id);
-        res.status(204).end();
+        try {
+            await prisma.photography.delete({
+                where: { id: Number(id) },
+            });
+            res.status(204).end();
+        } catch (error) {
+            res.status(500).json({ error: 'Failed to delete photography service' });
+        }
     } else {
         res.setHeader('Allow', ['GET', 'PUT', 'DELETE']);
         res.status(405).end(`Method ${req.method} Not Allowed`);

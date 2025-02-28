@@ -4,7 +4,10 @@ export default {
     login: async ({ username, password }: { username: string; password: string }) => {
         const session = await getSession();
         if (!session) {
-            await signIn('credentials', { redirect: false, username, password });
+            const result = await signIn('credentials', { redirect: false, username, password });
+            if (result?.error) {
+                throw new Error(result.error);
+            }
         }
         return Promise.resolve();
     },
@@ -23,5 +26,8 @@ export default {
         }
         return Promise.resolve();
     },
-    getPermissions: () => Promise.resolve(),
+    getPermissions: async () => {
+        const session = await getSession();
+        return session && session.user ? Promise.resolve(session.user.role) : Promise.reject();
+    },
 };
