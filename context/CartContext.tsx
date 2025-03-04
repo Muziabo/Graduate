@@ -1,5 +1,6 @@
-import { createContext, useContext, useReducer, ReactNode, useEffect } from 'react';
+'use client';
 
+import { createContext, useContext, useReducer, ReactNode, useEffect } from 'react';
 
 interface CartItem {
   id: string;
@@ -12,8 +13,6 @@ interface CartItem {
   frameMaterial?: string; // Added frameMaterial property
   frameThickness?: string; // Added frameThickness property
   image?: string; // Added image property
-
-
 }
 
 type CartState = CartItem[];
@@ -76,10 +75,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [cart]);
 
-
   const addToCart = (item: Omit<CartItem, 'id'> & { id?: string }) => {
     const cartItem: CartItem = {
-
       ...item,
       id: item.id || Math.random().toString(36).substr(2, 9),
       quantity: item.quantity || 1
@@ -98,7 +95,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const clearCart = () => {
     dispatch({ type: 'CLEAR_CART' });
   };
-
 
   return (
     <CartContext.Provider

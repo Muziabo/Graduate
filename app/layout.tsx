@@ -1,7 +1,8 @@
-'use client'
 import './globals.css'
-import { SessionProvider } from 'next-auth/react'
-import { CartProvider } from '../context/CartContext'
+import { Inter } from 'next/font/google'
+import { Providers } from './providers'
+
+const inter = Inter({ subsets: ['latin'] })
 
 export default function RootLayout({
   children,
@@ -10,12 +11,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
-        <CartProvider>
-          <SessionProvider>
-            {children}
-          </SessionProvider>
-        </CartProvider>
+      <body className={inter.className}>
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   )

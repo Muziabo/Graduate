@@ -14,8 +14,8 @@ model Order {
   status             String
   type               OrderType
   customMeasurements Json?
-  Gown               Gown?     @relation(fields: [gownId], references: [id])
-  Student            Student   @relation(fields: [studentId], references: [id])
+  Gown               Gown?     @relation(fields: [gownId], references: [id], onDelete: SetNull)
+  Student            Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
 }
 
 model Gown {
@@ -30,7 +30,7 @@ model Gown {
   type           GownType
   availableSizes Json?
   department     String
-  Institution    Institution  @relation(fields: [InstitutionId], references: [id])
+  Institution    Institution  @relation(fields: [InstitutionId], references: [id], onDelete: Cascade)
   images         Image[]
   orders         Order[]
 }
@@ -39,7 +39,7 @@ model Image {
   id     Int    @id @default(autoincrement())
   url    String
   gownId Int
-  Gown   Gown   @relation(fields: [gownId], references: [id])
+  Gown   Gown   @relation(fields: [gownId], references: [id], onDelete: Cascade)
 }
 
 model Institution {
@@ -67,7 +67,7 @@ model Photography {
   InstitutionId Int
   frames        Frame[]
   photoOrders   PhotoOrder[]
-  Institution   Institution        @relation(fields: [InstitutionId], references: [id])
+  Institution   Institution        @relation(fields: [InstitutionId], references: [id], onDelete: Cascade)
   images        PhotographyImage[]
 }
 
@@ -75,7 +75,7 @@ model PhotographyImage {
   id            Int         @id @default(autoincrement())
   url           String
   photographyId Int
-  photography   Photography @relation(fields: [photographyId], references: [id])
+  photography   Photography @relation(fields: [photographyId], references: [id], onDelete: Cascade)
 }
 
 model PhotoOrder {
@@ -87,9 +87,9 @@ model PhotoOrder {
   photoSize       String?
   frameId         Int?
   createdAt       DateTime       @default(now())
-  Frame           Frame?         @relation(fields: [frameId], references: [id])
-  Photography     Photography    @relation(fields: [photographyId], references: [id])
-  Student         Student        @relation(fields: [studentId], references: [id])
+  Frame           Frame?         @relation(fields: [frameId], references: [id], onDelete: SetNull)
+  Photography     Photography    @relation(fields: [photographyId], references: [id], onDelete: Cascade)
+  Student         Student        @relation(fields: [studentId], references: [id], onDelete: Cascade)
 }
 
 model Frame {
@@ -101,7 +101,7 @@ model Frame {
   material      String?
   mountColor    String?
   thickness     String?
-  Photography   Photography  @relation(fields: [photographyId], references: [id])
+  Photography   Photography  @relation(fields: [photographyId], references: [id], onDelete: Cascade)
   images        FrameImage[]
   photoOrders   PhotoOrder[]
 }
@@ -110,7 +110,7 @@ model FrameImage {
   id      Int    @id @default(autoincrement())
   url     String
   frameId Int
-  Frame   Frame  @relation(fields: [frameId], references: [id])
+  Frame   Frame  @relation(fields: [frameId], references: [id], onDelete: Cascade)
 }
 
 model Student {
@@ -125,7 +125,7 @@ model Student {
   orders        Order[]
   photoOrders   PhotoOrder[]
   sessions      Session[]
-  Institution   Institution  @relation(fields: [InstitutionId], references: [id])
+  Institution   Institution  @relation(fields: [InstitutionId], references: [id], onDelete: Cascade)
   user          User?        @relation(fields: [userId], references: [id])
 }
 
@@ -140,7 +140,7 @@ model User {
   accounts      Account[]
   sessions      Session[]
   student       Student?
-  institution   Institution? @relation("InstitutionToUsers", fields: [institutionId], references: [id], onDelete: Cascade)
+  institution   Institution? @relation("InstitutionToUsers", fields: [institutionId], references: [id], onDelete: SetNull)
 }
 
 model Session {

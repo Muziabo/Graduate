@@ -49,9 +49,9 @@ const StudentLogin = () => {
         }
 
         try {
-            const result = await signIn("credentials", {
+            const result = await signIn("student-login", {
                 email,
-                password: studentID,
+                studentId: studentID,
                 institution,
                 redirect: false,
                 callbackUrl: `/student/hero?institution=${encodeURIComponent(institution)}`,

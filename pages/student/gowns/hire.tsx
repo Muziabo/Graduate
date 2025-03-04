@@ -1,3 +1,5 @@
+'use client'
+
 import { useRouter } from "next/router";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
@@ -5,7 +7,7 @@ import ImageComponent from "@/components/ImageComponent";
 import { useCart } from "@/context/CartContext";
 
 interface Gown {
-  id: number;
+  id: string;
   name: string;
   size: string;
   price: number;
@@ -48,13 +50,9 @@ export default function HireGownDetails() {
   }, [id, session]);
 
   const fetchGownDetails = async () => {
-    if (!session) return; // Ensure session is available
+    if (!session) return;
     try {
-      const response = await fetch(`/api/gowns/${id}`, {
-        headers: {
-          'Authorization': `Bearer ${session.accessToken}`
-        }
-      });
+      const response = await fetch(`/api/gowns/${id}`);
       if (!response.ok) {
         throw new Error(`Error fetching gown details: ${response.statusText}`);
       }
@@ -63,28 +61,31 @@ export default function HireGownDetails() {
       setSelectedSize(data.size);
       setSelectedImage(data.images?.[0]?.url || null);
       setLoading(false);
-    } catch (err) {
+    } catch (error) {
+      console.error("Error fetching gown details:", error);
       setError("Failed to load gown details. Please try again.");
       setLoading(false);
     }
   };
 
   const handleAddToCart = () => {
+    if (!selectedDepartment) {
+      alert("Please select a department");
+      return;
+    }
+
     if (gown) {
       addToCart({
-        id: `${gown.id}-${selectedSize}-${selectedDepartment}`, // Create a unique ID
         name: gown.name,
         size: selectedSize,
         price: gown.price,
         quantity: 1,
         department: selectedDepartment,
-        image: selectedImage || gown.images?.[0]?.url || '' // Include image URL
+        image: selectedImage || gown.images?.[0]?.url || ''
       });
 
-
-              alert(`Added to cart! Size: ${selectedSize}, Department: ${selectedDepartment}`);
-              router.push('/student/photography'); // Redirect to photography page
-
+      alert(`Added to cart! Size: ${selectedSize}, Department: ${selectedDepartment}`);
+      router.push('/student/photography');
     }
   };
 
@@ -131,7 +132,6 @@ export default function HireGownDetails() {
                   className="w-96 h-96 object-cover rounded-md"
                 />
               )}
-
 
               <div className="flex mt-4 space-x-2">
                 {gown.images?.slice(0, 4).map((image, index) => (
@@ -188,9 +188,14 @@ export default function HireGownDetails() {
               <br />
               <button
                 onClick={handleAddToCart}
-                className="mt-4 bg-blue-900 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+                disabled={!selectedDepartment || !gown.inStock}
+                className={`mt-4 px-4 py-2 rounded-md ${
+                  !selectedDepartment || !gown.inStock
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-blue-900 hover:bg-blue-600'
+                } text-white`}
               >
-                Add to Cart
+                {!gown.inStock ? 'Out of Stock' : 'Add to Cart'}
               </button>
             </div>
           </div>
