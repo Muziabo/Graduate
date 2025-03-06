@@ -1,18 +1,18 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import { useCart } from "../../../context/CartContext";
+import { useCart } from "@/context/CartContext";
 
 const HardCopyDetails: React.FC = () => {
   const router = useRouter();
   const { selectedImage, selectedCategory, productName } = router.query;
 
   const [selectedSize, setSelectedSize] = useState("");
-  const [frameColor, setFrameColor] = useState("");
+  const [frameColor] = useState("");
   const [frameThickness, setFrameThickness] = useState("");
   const [frameMaterial, setFrameMaterial] = useState("");
-  const [frameColors, setFrameColors] = useState<string[]>([]);
+  const [setFrameColors] = useState<string[]>([]);
   const [frameThicknesses, setFrameThicknesses] = useState<string[]>([]);
   const [frameMaterials, setFrameMaterials] = useState<string[]>([]);
   const [frameImages, setFrameImages] = useState<string[]>([]);
@@ -34,7 +34,6 @@ const HardCopyDetails: React.FC = () => {
         if (!response.ok) throw new Error("Failed to fetch frame options");
         const data = await response.json();
 
-        setFrameColors(data.frameColors || []);
         setFrameThicknesses(data.frameThicknesses || []);
         setFrameMaterials(data.frameMaterials || []);
         setFrameImages((data.frameImages || []).slice(0, 4));
@@ -131,103 +130,102 @@ const HardCopyDetails: React.FC = () => {
         </div>
       )}
 
-<div className="max-w-7xl w-full bg-white shadow-lg rounded-lg p-3 sm:p-6 flex flex-col sm:flex-row">
-  <div className="w-full sm:w-1/2 p-3 flex">
-    {addFrame && (
-      <div className="flex flex-col space-y-1 mr-2">
-        <p className="text-sm font-semibold text-gray-700 mb-2">Frame Style</p>
-        <div className="grid grid-cols-1 gap-3">
-          {frameImages.length > 0 ? (
-            frameImages.map((frameImage, index) => (
-              <div
-                key={index}
-                onClick={() => setSelectedImageState(frameImage)}
-                className={`group cursor-pointer relative rounded-lg overflow-hidden transition-transform transform hover:scale-105 ${
-                  selectedImageState === frameImage ? "ring-2 ring-blue-500 shadow-lg" : "hover:shadow-lg"
-                }`}
-              >
-                <div className="relative aspect-[3/4]">
-                  <img src={frameImage} alt={`Frame ${index + 1}`} className="absolute inset-0 w-full h-full object-cover" />
-                  <div className="absolute inset-[10%] bg-white rounded shadow-inner overflow-hidden">
-                    <img src={userSelectedImage} alt="Selected Photo" className="w-full h-full object-contain" />
-                  </div>
+      <div className="max-w-7xl w-full bg-white shadow-lg rounded-lg p-3 sm:p-6 flex flex-col sm:flex-row">
+        <div className="w-full sm:w-1/2 p-3 flex">
+          {addFrame && (
+            <div className="flex flex-col space-y-1 mr-2">
+              <p className="text-sm font-semibold text-gray-700 mb-2">Frame Style</p>
+              <div className="grid grid-cols-1 gap-3">
+                {frameImages.length > 0 ? (
+                  frameImages.map((frameImage, index) => (
+                    <div
+                      key={index}
+                      onClick={() => setSelectedImageState(frameImage)}
+                      className={`group cursor-pointer relative rounded-lg overflow-hidden transition-transform transform hover:scale-105 ${
+                        selectedImageState === frameImage ? "ring-2 ring-blue-500 shadow-lg" : "hover:shadow-lg"
+                      }`}
+                    >
+                      <div className="relative aspect-[3/4]">
+                        <img src={frameImage} alt={`Frame ${index + 1}`} className="absolute inset-0 w-full h-full object-cover" />
+                        <div className="absolute inset-[10%] bg-white rounded shadow-inner overflow-hidden">
+                          <img src={userSelectedImage} alt="Selected Photo" className="w-full h-full object-contain" />
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-gray-500 text-center">No frame styles available</p>
+                )}
+              </div>
+            </div>
+          )}
+          <div className="relative w-full aspect-[3/4] shadow-md rounded-lg overflow-hidden">
+            {addFrame ? (
+              <>
+                <img src={selectedImageState} alt="Frame" className="absolute inset-0 w-full h-full object-cover" />
+                <div className="absolute inset-[10%] bg-white rounded shadow-inner overflow-hidden">
+                  <img src={userSelectedImage} alt="Selected Photo" className="w-full h-full object-contain" />
+                </div>
+              </>
+            ) : (
+              <img src={userSelectedImage} alt="Selected Photo" className="w-full h-full object-contain" />
+            )}
+          </div>
+        </div>
+        <div className="w-full sm:w-1/2 p-3 sm:p-5">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mb-3">{selectedCategory || "Product Details"}</h1>
+          <div className="bg-blue-50 p-3 rounded-lg mb-4">
+            <p className="text-xs text-gray-600 mb-1">⭐⭐⭐⭐⭐ Trusted by thousands of graduates</p>
+            <p className="text-gray-700 text-sm">Keep your memories safe with our premium frames.</p>
+          </div>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Photo Size</label>
+              <select value={selectedSize} onChange={(e) => setSelectedSize(e.target.value)} className=" w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                <option value="">Select Size</option>
+                <option value="Small">Small</option>
+                <option value="Medium">Medium</option>
+                <option value="Large">Large</option>
+                <option value="Extra Large">Extra Large</option>
+              </select>
+            </div>
+            <div className="bg-gray-50 p-3 rounded-lg">
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <input type="checkbox" checked={addFrame} onChange={(e) => setAddFrame(e.target.checked)} className="form-checkbox h-4 w-4 text-blue-600" />
+                <span className="text-gray-700 text-sm font-medium">Add Premium Frame (+K{frameCost})</span>
+              </label>
+            </div>
+            {addFrame && (
+              <div className="space-y-3 bg-gray-50 p-3 rounded-lg">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Frame Material</label>
+                  <select value={frameMaterial} onChange={(e) => setFrameMaterial(e.target.value)} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <option value="">Select Frame Material</option>
+                    {frameMaterials.map((material) => (
+                      <option key={material} value={material}>{material}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Frame Thickness</label>
+                  <select value={frameThickness} onChange={(e) => setFrameThickness(e.target.value)} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <option value="">Select Frame Thickness</option>
+                    {frameThicknesses.map((thickness) => (
+                      <option key={thickness} value={thickness}>{thickness}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
-            ))
-          ) : (
-            <p className="text-gray-500 text-center">No frame styles available</p>
-          )}
-        </div>
-      </div>
-    )}
-    <div className="relative w-full aspect-[3/4] shadow-md rounded-lg overflow-hidden">
-      {addFrame ? (
-        <>
-          <img src={selectedImageState} alt="Frame" className="absolute inset-0 w-full h-full object-cover" />
-          <div className="absolute inset-[10%] bg-white rounded shadow-inner overflow-hidden">
-            <img src={userSelectedImage} alt="Selected Photo" className="w-full h-full object-contain" />
+            )}
           </div>
-        </>
-      ) : (
-        <img src={userSelectedImage} alt="Selected Photo" className="w-full h-full object-contain" />
-      )}
-    </div>
-  </div>
-  <div className="w-full sm:w-1/2 p-3 sm:p-5">
-    <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mb-3">{selectedCategory || "Product Details"}</h1>
-    <div className="bg-blue-50 p-3 rounded-lg mb-4">
-      <p className="text-xs text-gray-600 mb-1">⭐⭐⭐⭐⭐ Trusted by thousands of graduates</p>
-      <p className="text-gray-700 text-sm">Keep your memories safe with our premium frames.</p>
-    </div>
-    <div className="space-y-4">
-      <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-1">Photo Size</label>
-        <select value={selectedSize} onChange={(e) => setSelectedSize(e.target.value)} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
-          <option value="">Select Size</option>
-          <option value="Small">Small</option>
-          <option value="Medium">Medium</option>
-          <option value="Large">Large</option>
-          <option value="Extra Large">Extra Large</option>
-        </select>
-      </div>
-      <div className="bg-gray-50 p-3 rounded-lg">
-        <label className="flex items-center space-x-2 cursor-pointer">
-          <input type="checkbox" checked={addFrame} onChange={(e) => setAddFrame(e.target.checked)} className="form-checkbox h-4 w-4 text-blue-600" />
-          <span className="text-gray-700 text-sm font-medium">Add Premium Frame (+K{frameCost})</span>
-        </label>
-      </div>
-      {addFrame && (
-        <div className="space-y-3 bg-gray-50 p-3 rounded-lg">
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Frame Material</label>
-            <select value={frameMaterial} onChange={(e) => setFrameMaterial(e.target.value)} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
-              <option value="">Select Frame Material</option>
-              {frameMaterials.map((material) => (
-                <option key={material} value={material}>{material}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Frame Thickness</label>
-            <select value={frameThickness} onChange={(e) => setFrameThickness(e.target.value)} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
-              <option value="">Select Frame Thickness</option>
-              {frameThicknesses.map((thickness) => (
-                <option key={thickness} value={thickness}>{thickness}</option>
-              ))}
-            </select>
+          <div className="mt-6 space-y-3">
+            <p className="text-lg font-bold text-gray-800">Total: ZMK {totalPrice !== null ? totalPrice.toFixed(2) : "Loading..."}</p>
+            <button onClick={handleSubmit} disabled={!selectedSize || (addFrame && (!frameColor || !frameThickness))} className={`w-full py-3 px-5 rounded-lg text-white font-semibold transition-transform transform hover:scale-105 ${!selectedSize || (addFrame && (!frameColor || !frameThickness)) ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700 shadow-lg hover:shadow-xl"}`}>
+              Add to Cart
+            </button>
           </div>
         </div>
-      )}
-    </div>
-    <div className="mt-6 space-y-3">
-      <p className="text-lg font-bold text-gray-800">Total: ZMK {totalPrice !== null ? totalPrice.toFixed(2) : "Loading..."}</p>
-      <button onClick={handleSubmit} disabled={!selectedSize || (addFrame && (!frameColor || !frameThickness))} className={`w-full py-3 px-5 rounded-lg text-white font-semibold transition-transform transform hover:scale-105 ${!selectedSize || (addFrame && (!frameColor || !frameThickness)) ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700 shadow-lg hover:shadow-xl"}`}>
-        Add to Cart
-      </button>
-    </div>
-  </div>
-</div>
-
+      </div>
     </div>
   );
 };

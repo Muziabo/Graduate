@@ -2,7 +2,7 @@ import { Admin, Resource, CustomRoutes } from "react-admin";
 
 import { Route } from "react-router-dom";
 import authProvider from "@/provider/authProvider";
-import dataProvider from "@/lib/dataProvider";
+import { simpleRestProvider } from 'ra-data-simple-rest';
 import Dashboard from "@/components/admin/Dashboard";
 import CustomLayout from "@/components/admin/CustomLayout";
 import { useSession } from "next-auth/react";
@@ -42,93 +42,93 @@ import InstAdminShow from "@/components/admin/resources/administrator/instAdmin/
 // Gown Create Form
 import GownCreateForm from "@/components/admin/GownCreateForm";
 
-const AdminDashboard = () => {
-    const { data: session, status } = useSession();
-    const router = useRouter();
+const dataProvider = simpleRestProvider('/api/admin');
 
-    useEffect(() => {
-        if (status === "loading") return;
+export default function AdminDashboard() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
 
-        if (!session || (session.user.role !== "ADMIN" && session.user.role !== "INSTITUTION_ADMIN")) {
-            router.push("/admin/login");
-        }
-    }, [session, status, router]);
-
-    if (status === "loading") {
-        return <div>Loading...</div>;
-    }
+  useEffect(() => {
+    if (status === "loading") return;
 
     if (!session || (session.user.role !== "ADMIN" && session.user.role !== "INSTITUTION_ADMIN")) {
-        return null;
+      router.push("/admin/login");
     }
+  }, [session, status, router]);
 
-    return (
-        <div className="react-admin-layout">
-            <Admin
-                authProvider={authProvider}
-                dataProvider={dataProvider}
-                dashboard={Dashboard}
-                layout={(props) => <CustomLayout {...props} role={session.user.role} />}
-            >
-                <Resource
-                    name="students"
-                    list={StudentList}
-                    create={StudentCreate}
-                    edit={StudentEdit}
-                    show={StudentShow}
-                    options={{ label: "Students" }}
-                />
-                {session.user.role === "ADMIN" && (
-                    <Resource
-                        name="institutions"
-                        list={InstitutionList}
-                        create={InstitutionCreate}
-                        edit={InstitutionEdit}
-                        show={InstitutionShow}
-                        options={{ label: "Institutions" }}
-                    />
-                )}
-                <Resource
-                    name="gowns"
-                    list={GownList}
-                    edit={GownEdit}
-                    show={GownShow}
-                    options={{ label: "Gowns" }}
-                />
-                <Resource
-                    name="orders"
-                    list={OrderList}
-                    edit={OrderEdit}
-                    show={OrderShow}
-                    options={{ label: "Orders" }}
-                />
+  if (status === "loading") {
+    return <div>Loading...</div>;
+  }
 
-                {session.user.role === "ADMIN" && (
-                    <Resource
-                        name="system"
-                        edit={SystemAdminEdit}
-                        show={SystemAdminShow}
-                        options={{ label: "System User" }}
-                    />
-                )}
+  if (!session || (session.user.role !== "ADMIN" && session.user.role !== "INSTITUTION_ADMIN")) {
+    return null;
+  }
 
-                {session.user.role === "ADMIN" && (
-                    <Resource
-                        name="system"
-                        edit={InstAdminEdit}
-                        show={InstAdminShow}
-                        options={{ label: "Institution Admin" }}
-                    />
-                )}
+  return (
+    <div className="react-admin-layout">
+      <Admin
+        dataProvider={dataProvider}
+        authProvider={authProvider}
+        dashboard={Dashboard}
+        layout={(props) => <CustomLayout {...props} role={session.user.role} />}
+      >
+        <Resource
+          name="students"
+          list={StudentList}
+          create={StudentCreate}
+          edit={StudentEdit}
+          show={StudentShow}
+          options={{ label: "Students" }}
+        />
+        {session.user.role === "ADMIN" && (
+          <Resource
+            name="institutions"
+            list={InstitutionList}
+            create={InstitutionCreate}
+            edit={InstitutionEdit}
+            show={InstitutionShow}
+            options={{ label: "Institutions" }}
+          />
+        )}
+        <Resource
+          name="gowns"
+          list={GownList}
+          edit={GownEdit}
+          show={GownShow}
+          options={{ label: "Gowns" }}
+        />
+        <Resource
+          name="orders"
+          list={OrderList}
+          edit={OrderEdit}
+          show={OrderShow}
+          options={{ label: "Orders" }}
+        />
 
-                {session.user.role === "INSTITUTION_ADMIN" && (
-                    <CustomRoutes>
-                        <Route path="/create-gown" element={<GownCreateForm />} />
-                    </CustomRoutes>
-                )}
-            </Admin>
-        </div>
-    );
-};
+        {session.user.role === "ADMIN" && (
+          <Resource
+            name="system"
+            edit={SystemAdminEdit}
+            show={SystemAdminShow}
+            options={{ label: "System User" }}
+          />
+        )}
 
-export default AdminDashboard;
+        {session.user.role === "ADMIN" && (
+          <Resource
+            name="system"
+            edit={InstAdminEdit}
+            show={InstAdminShow}
+            options={{ label: "Institution Admin" }}
+          />
+        )}
+
+        {session.user.role === "INSTITUTION_ADMIN" && (
+          <CustomRoutes>
+            <Route path="/create-gown" element={<GownCreateForm />} />
+          </CustomRoutes>
+        )}
+      </Admin>
+    </div>
+  );
+}
