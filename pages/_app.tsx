@@ -1,16 +1,16 @@
 import { AppProps } from "next/app";
 import { SessionProvider } from "next-auth/react";
-import { CartProvider } from "../context/CartContext"; // Ensure this path is correct
-import StudentLayout from "../components/Layout"; // Use the existing Layout for students
-import AdminLayout from "../components/admin/Layout"; // Use the existing Layout for admins
-import "../app/globals.css"; // Ensure this path is correct
+import { CartProvider } from "../context/CartContext"; 
+import StudentLayout from "../components/Layout"; 
+import AdminLayout from "../components/admin/Layout"; 
+import "../app/globals.css"; 
 
 export default function MyApp({ Component, pageProps: { session, ...pageProps } }: AppProps) {
-  const isAdmin = pageProps.session?.user?.role === "ADMIN";
+  const role = session?.user?.role;
 
   return (
     <SessionProvider session={session}>
-      {isAdmin ? (
+      {role === 'ADMIN' || role === 'INSTITUTION_ADMIN' ? (
         <AdminLayout>
           <Component {...pageProps} />
         </AdminLayout>

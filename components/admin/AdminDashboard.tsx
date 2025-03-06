@@ -47,7 +47,7 @@ const AdminDashboard = () => {
     const router = useRouter();
 
     useEffect(() => {
-        if (status === "loading") return; // Show loading spinner
+        if (status === "loading") return;
 
         if (!session || (session.user.role !== "ADMIN" && session.user.role !== "INSTITUTION_ADMIN")) {
             router.push("/admin/login");
@@ -59,74 +59,75 @@ const AdminDashboard = () => {
     }
 
     if (!session || (session.user.role !== "ADMIN" && session.user.role !== "INSTITUTION_ADMIN")) {
-        return <div>You are not authorized to access this page.</div>;
-
+        return null;
     }
 
     return (
-        <Admin
-            authProvider={authProvider}
-            dataProvider={dataProvider}
-            dashboard={Dashboard}
-            layout={(props) => <CustomLayout {...props} role={session.user.role} />} // Pass role to CustomLayout
-        >
-            <Resource
-                name="students"
-                list={StudentList}
-                create={StudentCreate} // Added Create
-                edit={StudentEdit}
-                show={StudentShow}
-                options={{ label: "Students" }}
-            />
-            {session.user.role === "ADMIN" && (
+        <div className="react-admin-layout">
+            <Admin
+                authProvider={authProvider}
+                dataProvider={dataProvider}
+                dashboard={Dashboard}
+                layout={(props) => <CustomLayout {...props} role={session.user.role} />}
+            >
                 <Resource
-                    name="institutions"
-                    list={InstitutionList}
-                    create={InstitutionCreate} // Added Create
-                    edit={InstitutionEdit}
-                    show={InstitutionShow}
-                    options={{ label: "Institutions" }}
+                    name="students"
+                    list={StudentList}
+                    create={StudentCreate}
+                    edit={StudentEdit}
+                    show={StudentShow}
+                    options={{ label: "Students" }}
                 />
-            )}
-            <Resource
-                name="gowns"
-                list={GownList}
-                edit={GownEdit}
-                show={GownShow}
-                options={{ label: "Gowns" }}
-            />
-            <Resource
-                name="orders"
-                list={OrderList}
-                edit={OrderEdit}
-                show={OrderShow}
-                options={{ label: "Orders" }}
-            />
-
-            {session.user.role === "ADMIN" && (
+                {session.user.role === "ADMIN" && (
+                    <Resource
+                        name="institutions"
+                        list={InstitutionList}
+                        create={InstitutionCreate}
+                        edit={InstitutionEdit}
+                        show={InstitutionShow}
+                        options={{ label: "Institutions" }}
+                    />
+                )}
                 <Resource
-                    name="system"
-                    edit={SystemAdminEdit}
-                    show={SystemAdminShow}
-                    options={{ label: "System User" }}
+                    name="gowns"
+                    list={GownList}
+                    edit={GownEdit}
+                    show={GownShow}
+                    options={{ label: "Gowns" }}
                 />
-            )}
-
-            {session.user.role === "ADMIN" && (
                 <Resource
-                    name="system"
-                    edit={InstAdminEdit}
-                    show={InstAdminShow}
-                    options={{ label: "Institution Admin" }}
+                    name="orders"
+                    list={OrderList}
+                    edit={OrderEdit}
+                    show={OrderShow}
+                    options={{ label: "Orders" }}
                 />
-            )}
 
-            {session.user.role === "INSTITUTION_ADMIN" && (
-                <CustomRoutes>
-                    <Route path="/create-gown" element={<GownCreateForm />} />
-                </CustomRoutes>
-            )}
-        </Admin>
+                {session.user.role === "ADMIN" && (
+                    <Resource
+                        name="system"
+                        edit={SystemAdminEdit}
+                        show={SystemAdminShow}
+                        options={{ label: "System User" }}
+                    />
+                )}
+
+                {session.user.role === "ADMIN" && (
+                    <Resource
+                        name="system"
+                        edit={InstAdminEdit}
+                        show={InstAdminShow}
+                        options={{ label: "Institution Admin" }}
+                    />
+                )}
+
+                {session.user.role === "INSTITUTION_ADMIN" && (
+                    <CustomRoutes>
+                        <Route path="/create-gown" element={<GownCreateForm />} />
+                    </CustomRoutes>
+                )}
+            </Admin>
+        </div>
     );
 };
 

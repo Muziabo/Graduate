@@ -1,4 +1,5 @@
-import NextAuth, { NextAuthOptions } from "next-auth";
+import NextAuth from "next-auth";
+import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
@@ -47,7 +48,9 @@ async function handleStudentLogin(email: string, studentId: string, institution:
         return {
             id: student.id.toString(),
             email: student.email,
+            name: student.name, // Ensure name is included
             role: "STUDENT",
+
             institutionId: student.Institution.id.toString(),
             institutionName: student.Institution.name,
         };
@@ -160,8 +163,12 @@ export const authOptions: NextAuthOptions = {
                 if (token.institutionName) {
                     session.user.institutionName = token.institutionName;
                 }
+                if (token.name) {
+                    session.user.name = token.name;
+                }
             }
             return session;
+
         },
     },
     pages: {

@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import { useRouter } from "next/router";
 import { useSession } from "next-auth/react";
@@ -42,6 +42,7 @@ export default function HireGownDetails() {
   const [selectedSize, setSelectedSize] = useState("");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedDepartment, setSelectedDepartment] = useState("");
+  const [showAddedMessage, setShowAddedMessage] = useState(false);
 
   useEffect(() => {
     if (id && session) {
@@ -57,6 +58,7 @@ export default function HireGownDetails() {
         throw new Error(`Error fetching gown details: ${response.statusText}`);
       }
       const data = await response.json();
+      console.log("Fetched Gown Details:", data); // Debugging log
       setGown(data);
       setSelectedSize(data.size);
       setSelectedImage(data.images?.[0]?.url || null);
@@ -81,11 +83,12 @@ export default function HireGownDetails() {
         price: gown.price,
         quantity: 1,
         department: selectedDepartment,
-        image: selectedImage || gown.images?.[0]?.url || ''
+        image: selectedImage || gown.images?.[0]?.url || ""
       });
 
-      alert(`Added to cart! Size: ${selectedSize}, Department: ${selectedDepartment}`);
-      router.push('/student/photography');
+      // Show the floating confirmation popup
+      setShowAddedMessage(true);
+      setTimeout(() => setShowAddedMessage(false), 3000);
     }
   };
 
@@ -114,7 +117,45 @@ export default function HireGownDetails() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center bg-gray-50 p-6">
+    <div className="min-h-screen flex flex-col items-center bg-gray-50 p-6 relative">
+      {/* Floating "Added to Cart" Popup */}
+      {showAddedMessage && (
+        <div className="fixed top-10 right-10 bg-white shadow-lg rounded-lg p-4 w-80 border border-gray-300 z-50">
+          <div className="flex items-center space-x-4">
+            <img
+              src={selectedImage || gown?.images?.[0]?.url || ""}
+              alt="Gown"
+              className="w-16 h-16 object-cover rounded"
+            />
+            <div>
+              <p className="font-semibold text-gray-900">Item Added to Cart</p>
+              <p className="text-sm text-gray-600">{gown?.name}</p>
+              <p className="text-sm text-gray-600">Size: {selectedSize}</p>
+              <p className="text-sm text-gray-600">
+                Department: {selectedDepartment}
+              </p>
+              <p className="text-sm text-gray-600">
+                Price: ZMK {gown?.price}
+              </p>
+            </div>
+          </div>
+          <div className="mt-4 flex justify-between">
+            <button
+              onClick={() => router.push("/cart")}
+              className="text-blue-600 font-semibold"
+            >
+              View Cart
+            </button>
+            <button
+              onClick={() => router.push("/checkout")}
+              className="bg-yellow-500 text-white py-2 px-4 rounded"
+            >
+              Checkout
+            </button>
+          </div>
+        </div>
+      )}
+
       {gown && (
         <div className="max-w-4xl w-full bg-white shadow-sm rounded-lg p-6 mb-8">
           <div className="flex flex-col md:flex-row">
@@ -125,23 +166,27 @@ export default function HireGownDetails() {
                   alt={gown.type}
                   className="w-96 h-96 object-cover rounded-md"
                 />
-              ) : gown.images?.[0]?.url && (
-                <ImageComponent
-                  src={gown.images[0].url}
-                  alt={gown.type}
-                  className="w-96 h-96 object-cover rounded-md"
-                />
+              ) : (
+                gown.images?.[0]?.url && (
+                  <ImageComponent
+                    src={gown.images[0].url}
+                    alt={gown.type}
+                    className="w-96 h-96 object-cover rounded-md"
+                  />
+                )
               )}
 
               <div className="flex mt-4 space-x-2">
                 {gown.images?.slice(0, 4).map((image, index) => (
-                  <div 
+                  <div
                     key={index}
-                    className={`w-20 h-20 rounded-md cursor-pointer ${selectedImage === image.url ? 'border-4 border-blue-500' : ''}`}
+                    className={`w-20 h-20 rounded-md cursor-pointer ${
+                      selectedImage === image.url ? "border-4 border-blue-500" : ""
+                    }`}
                     onClick={() => setSelectedImage(image.url)}
                   >
                     <ImageComponent
-                      src={image.url || ''}
+                      src={image.url || ""}
                       alt={`Thumbnail ${index + 1}`}
                       className="w-full h-full object-cover rounded-md"
                     />
@@ -150,11 +195,19 @@ export default function HireGownDetails() {
               </div>
             </div>
             <div className="mt-4 md:mt-0 md:ml-4">
-              <h1 className="text-3xl font-bold text-[#01689c] mb-4">{gown.Institution.name}</h1>
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">{gown.type}</h2>
+              <h1 className="text-3xl font-bold text-[#01689c] mb-4">
+                {gown.Institution.name}
+              </h1>
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">
+                {gown.type}
+              </h2>
               <p className="text-gray-600">Price: ZMK{gown.price}</p>
-              <p className="text-gray-600">{gown.inStock ? 'In Stock' : 'Out of Stock'}</p>
-              <label htmlFor="size" className="block text-gray-600 mt-4">Select Size:</label>
+              <p className="text-gray-600">
+                {gown.inStock ? "In Stock" : "Out of Stock"}
+              </p>
+              <label htmlFor="size" className="block text-gray-600 mt-4">
+                Select Size:
+              </label>
               <select
                 id="size"
                 value={selectedSize}
@@ -171,7 +224,9 @@ export default function HireGownDetails() {
                   <option value={gown.size}>{gown.size}</option>
                 )}
               </select>
-              <label htmlFor="department" className="block text-gray-600 mt-4">Select Department:</label>
+              <label htmlFor="department" className="block text-gray-600 mt-4">
+                Select Department:
+              </label>
               <select
                 id="department"
                 value={selectedDepartment}
@@ -191,11 +246,11 @@ export default function HireGownDetails() {
                 disabled={!selectedDepartment || !gown.inStock}
                 className={`mt-4 px-4 py-2 rounded-md ${
                   !selectedDepartment || !gown.inStock
-                    ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-blue-900 hover:bg-blue-600'
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-blue-900 hover:bg-blue-600"
                 } text-white`}
               >
-                {!gown.inStock ? 'Out of Stock' : 'Add to Cart'}
+                {!gown.inStock ? "Out of Stock" : "Add to Cart"}
               </button>
             </div>
           </div>

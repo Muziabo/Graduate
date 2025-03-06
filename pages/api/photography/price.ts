@@ -21,7 +21,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       res.status(404).json({ error: 'Photography not found' });
     }
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch price' });
+    console.error('Prisma error details:', error);
+    res.status(500).json({ error: 'Failed to fetch price', details: error.message });
   } finally {
     await prisma.$disconnect();
   }

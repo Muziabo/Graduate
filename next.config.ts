@@ -6,6 +6,9 @@ const nextConfig = {
     compiler: {
         removeConsole: false,
     },
+    images: {
+        domains: ['loremflickr.com', 'picsum.photos'],
+    },
 };
 
 module.exports = nextConfig;
